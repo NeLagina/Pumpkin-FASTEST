@@ -3,27 +3,27 @@ use std::time::SystemTime;
 use std::io::{self, Write};
 fn main() {
     println!("{} \x1b[34m[INFO]\x1b[0m (1) Starting Pumpkin 0.1.0-dev+1.21.7 for Minecraft 1.21.7 (Protocol 772)", get_local_time_string());
-    delay_ms(500, 2000);
+    delay_ms(0, 2000);
     println!("{} \x1b[33m[WARN]\x1b[0m Pumpkin is currently under heavy development!", get_local_time_string());
-    delay_ms(500, 2000);
+    delay_ms(0, 2000);
     println!("{} \x1b[34m[INFO]\x1b[0m (1) Report issues on https://github.com/Pumpkin-MC/Pumpkin/issues", get_local_time_string());
-    delay_ms(500, 2000);
+    delay_ms(0, 2000);
     println!("{} \x1b[34m[INFO]\x1b[0m (1) Join our Discord for community support: https://discord.com/invite/wT8XjrjKkf", get_local_time_string());
-    delay_ms(500, 2000);
+    delay_ms(0, 2000);
     println!("{} \x1b[34m[INFO]\x1b[0m (1) Loading Overworld: -1404760116303608497", get_local_time_string());
-    delay_ms(500, 2000);
+    delay_ms(0, 2000);
     println!("{} \x1b[34m[INFO]\x1b[0m (1) Loading Nether: -1404760116303608497", get_local_time_string());
-    delay_ms(500, 2000);
+    delay_ms(0, 2000);
     println!("{} \x1b[34m[INFO]\x1b[0m (1) Loading End: -1404760116303608497", get_local_time_string());
-    delay_ms(500, 2000);
+    delay_ms(0, 2000);
     println!("{} \x1b[33m[WARN]\x1b[0m Failed to load favicon from 'icon.png': not found; using default.", get_local_time_string());
-    delay_ms(500, 2000);
+    delay_ms(0, 2000);
     println!("{} \x1b[34m[INFO]\x1b[0m (1) Query protocol is enabled. Starting...", get_local_time_string());
-    delay_ms(500, 2000);
+    delay_ms(0, 2000);
     println!("{} \x1b[34m[INFO]\x1b[0m (1) Started server; took 830ms", get_local_time_string());
-    delay_ms(500, 2000);
+    delay_ms(0, 2000);
     println!("{} \x1b[34m[INFO]\x1b[0m (7) Server query running on 0.0.0.0:25565", get_local_time_string());
-    delay_ms(500, 2000);
+    delay_ms(0, 2000);
     println!("{} \x1b[34m[INFO]\x1b[0m (1) Server is now running. Connect using: Java Edition: 0.0.0.0:25565 | Bedrock/Pocket Edition: 0.0.0.0:19132", get_local_time_string());
     loop {
         print!("$ ");
@@ -56,17 +56,29 @@ fn delay_ms(min_ms: u64, max_ms: u64) {
     sleep(Duration::from_millis(delay_ms));
 }
 
-#[cfg(windows)]
+
 fn get_local_time_string() -> String {
     use std::mem::MaybeUninit;
-    use libc::{time, time_t, localtime_s, tm};
+    use libc::{time, time_t, tm};
 
     unsafe {
         let mut raw_time: time_t = 0;
         time(&mut raw_time);
 
         let mut result_tm: MaybeUninit<tm> = MaybeUninit::uninit();
-        localtime_s(result_tm.as_mut_ptr(), &raw_time);
+
+        #[cfg(windows)]
+        {
+            use libc::localtime_s;
+            localtime_s(result_tm.as_mut_ptr(), &raw_time);
+        }
+
+        #[cfg(unix)]
+        {
+            use libc::localtime_r;
+            localtime_r(&raw_time, result_tm.as_mut_ptr());
+        }
+
         let tm = result_tm.assume_init();
         format!(
             "{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
